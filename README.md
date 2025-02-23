@@ -1,4 +1,3 @@
-# Assignment-on-Container-Orchestration
 ## Prerequisites
 Ensure you have the following installed before proceeding:
 
@@ -37,8 +36,7 @@ Ensure Helm is correctly installed:
 
 sh
 
-helm version
-If Helm is not recognized, add it to your system PATH and restart the terminal.
+helm version #If Helm is not recognized, add it to your system PATH and restart the terminal.
 
 Step 3: Update values.yaml  #Open mern-chart/values.yaml and define service.port for each component:
 
@@ -87,8 +85,8 @@ Step 5: Install the Helm Chart  #From the mern-chart directory, install or upgra
 sh
 
 helm upgrade --install mern-app ./mern-chart
-Step 6: Verify Deployment
-Check if the Helm release is installed:
+
+Step 6: Verify Deployment #Check if the Helm release is installed:
 
 sh
 
@@ -102,49 +100,59 @@ Check Kubernetes services:
 
 sh
 
+kubectl get services # If you see mern-app running, the deployment was successful!
+
+Step 7:Automate Deployment with Jenkins
+
+Jenkins Groovy Code
+
+pipeline {
+    agent any
+    environment {
+        DOCKERHUB_CREDENTIALS = credentials('docker-hub-credentials')
+    }
+    stages {
+        stage('Build and Push Images') {
+            steps {
+                script {
+                    docker.build("mydockerhubusername/frontend").push("latest")
+                    docker.build("mydockerhubusername/backend").push("latest")
+                }
+            }
+        }
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh 'kubectl apply -f k8s/'
+            }
+        }
+        stage('Deploy using Helm') {
+            steps {
+                sh 'helm upgrade --install mern-app ./helm/mern-chart'
+            }
+        }
+    }
+}
+
+
+Step 8 : Testing and Validation  #Deploy to Minikube or a Kubernetes cluster
+
+sh
+
+kubectl apply -f backend-deployment.yaml
+kubectl apply -f frontend-deployment.yaml
+kubectl apply -f mongo-deployment.yaml
+
+Check running pods and services:
+
+sh
+
+kubectl get pods
 kubectl get services
-If you see mern-app running, the deployment was successful!
 
-Troubleshooting
-Helm Install Fails: "nil pointer evaluating interface {}.port"
-Fix: Ensure values.yaml has service.port defined for each service.
-
-Helm Command Not Found
-Fix: Ensure Helm is installed and added to your system PATH.
-
-Kubernetes Cluster Not Running
-If kubectl get pods gives a connection error:
+Access the frontend:
 
 sh
 
-kubectl cluster-info
-minikube start  # If using Minikube
+minikube service frontend-service
 
-Useful Commands
-
-Delete Helm Deployment
-sh
-
-
-helm uninstall mern-app
-
-Delete All Kubernetes Resources
-sh
-
-
-kubectl delete all --all
-
-Debug Kubernetes Pod
-sh
-
-
-kubectl logs <pod_name>
-kubectl describe pod <pod_name>
-
-Next Steps
-Scale the deployment using Helm
-Add environment variables via Helm values
-Deploy on a cloud provider (AWS EKS, GKE, AKS)
-
-Your MERN App is Running on Kubernetes! 
-
+This approach ensures a structured deployment process using Kubernetes, Helm, and Jenkins to automate the CI/CD pipeline. 
